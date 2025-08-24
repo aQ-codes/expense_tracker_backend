@@ -23,7 +23,7 @@ router.post('/login', AuthController.login);
  * @desc Logout user
  * @access Private
  */
-router.post('/logout', authenticateUser, AuthController.logout);
+router.post('/logout', AuthController.logout);
 
 /**
  * @route GET /api/auth/profile

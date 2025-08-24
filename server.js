@@ -7,6 +7,7 @@ import connectDB from "./src/config/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import configureRoutes from "./src/routes/routes.js";
+import seedCategories from "./src/seeders/category-seeder.js";
 
 
 const allowedOrigins = [
@@ -47,8 +48,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Connect to MongoDB
 connectDB()
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB');
+    
+    // Seed default categories
+    try {
+      await seedCategories();
+    } catch (error) {
+      console.error('Error seeding categories:', error);
+    }
   })
   .catch((error) => {
     console.error("Error connecting to MongoDB:", error);
