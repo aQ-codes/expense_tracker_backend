@@ -9,31 +9,31 @@ const categoryController = new CategoryController();
 router.use(authenticateUser);
 
 /**
- * @route GET /api/categories
+ * @route POST /api/categories
  * @desc Get all categories for the authenticated user (default + user-specific)
  * @access Private
  */
-router.get('/', categoryController.getCategories.bind(categoryController));
+router.post('/', categoryController.getCategories.bind(categoryController));
 
 /**
- * @route POST /api/categories
+ * @route POST /api/categories/create
  * @desc Create a new category for the authenticated user
  * @access Private
  */
-router.post('/', categoryController.createCategory.bind(categoryController));
+router.post('/create', categoryController.createCategory.bind(categoryController));
 
 /**
- * @route PUT /api/categories/:id
+ * @route POST /api/categories/update/:id
  * @desc Update a category (only user-created categories)
  * @access Private
  */
-router.put('/:id', categoryController.updateCategory.bind(categoryController));
+router.post('/update/:id', categoryController.updateCategory.bind(categoryController));
 
 /**
- * @route DELETE /api/categories/:id
+ * @route POST /api/categories/delete/:id
  * @desc Delete a category (only user-created categories)
  * @access Private
  */
-router.delete('/:id', categoryController.deleteCategory.bind(categoryController));
+router.post('/delete/:id', categoryController.deleteCategory.bind(categoryController));
 
 export default router;

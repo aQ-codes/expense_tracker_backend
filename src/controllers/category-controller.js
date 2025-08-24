@@ -1,5 +1,6 @@
 import CategoryRepository from "../repositories/category-repository.js";
 import CategoryResponse from "../responses/category-response.js";
+import CategoryRequest from "../requests/category-request.js";
 import { CustomValidationError } from "../exceptions/custom-validation-error.js";
 
 const categoryRepo = new CategoryRepository();
@@ -13,9 +14,13 @@ export default class CategoryController {
     async getCategories(req, res) {
         try {
             const userId = req.user._id;
+            console.log('Getting categories for user:', userId);
+            
             const categories = await categoryRepo.getCategoriesForUser(userId);
+            console.log('Raw categories from repository:', categories);
             
             const formattedData = CategoryResponse.formatCategorySet(categories);
+            console.log('Formatted categories:', formattedData);
             
             return res.status(200).json({
                 status: true,
@@ -43,19 +48,20 @@ export default class CategoryController {
             const userId = req.user._id;
 
             // Validate input
-            if (!name || name.trim().length < 2) {
-                throw new CustomValidationError(['Category name must be at least 2 characters long']);
+            const validation = CategoryRequest.validateCreateCategory({ name });
+            if (!validation.isValid) {
+                throw new CustomValidationError(validation.errors);
             }
 
             // Check if category name already exists for this user
-            const nameExists = await categoryRepo.categoryNameExists(name.trim(), userId);
+            const nameExists = await CategoryRequest.checkCategoryNameExists(validation.data.name, userId);
             if (nameExists) {
                 throw new CustomValidationError(['Category name already exists']);
             }
 
             // Create category
             const categoryData = {
-                name: name.trim(),
+                name: validation.data.name.trim(),
                 isDefault: false,
                 createdBy: userId
             };
@@ -107,8 +113,9 @@ export default class CategoryController {
             const userId = req.user._id;
 
             // Validate input
-            if (!name || name.trim().length < 2) {
-                throw new CustomValidationError(['Category name must be at least 2 characters long']);
+            const validation = CategoryRequest.validateUpdateCategory({ name });
+            if (!validation.isValid) {
+                throw new CustomValidationError(validation.errors);
             }
 
             // Check if category exists and user owns it
@@ -138,13 +145,13 @@ export default class CategoryController {
             }
 
             // Check if new name already exists
-            const nameExists = await categoryRepo.categoryNameExists(name.trim(), userId);
-            if (nameExists && category.name.toLowerCase() !== name.trim().toLowerCase()) {
+            const nameExists = await CategoryRequest.checkCategoryNameExists(validation.data.name, userId);
+            if (nameExists && category.name.toLowerCase() !== validation.data.name.trim().toLowerCase()) {
                 throw new CustomValidationError(['Category name already exists']);
             }
 
             // Update category
-            const result = await categoryRepo.updateCategory(id, { name: name.trim() });
+            const result = await categoryRepo.updateCategory(id, { name: validation.data.name.trim() });
             
             if (result.status) {
                 const formattedData = CategoryResponse.formatCategory(result.data);

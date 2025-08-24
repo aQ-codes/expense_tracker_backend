@@ -1,25 +1,27 @@
 
-export default class CategoryResponse{
+export default class CategoryResponse {
     /**
-  * Transform the Category resource into an object.
-  * @param {Object} category - The object with category.
-  * @return {Object} - An object containing selected properties of category.
-  */
- async formattedResponse  (category) {
-     return ({
-         id:category.id,
-         category:category.category,
-         timeentry:category.time_entry
-     });
- };   
+     * Transform a single category into a formatted response object.
+     * @param {Object} category - The category object from database.
+     * @return {Object} - Formatted category response.
+     */
+    static formatCategory(category) {
+        return {
+            id: category._id,
+            name: category.name,
+            isDefault: category.isDefault,
+            createdBy: category.createdBy,
+            createdAt: category.createdAt,
+            updatedAt: category.updatedAt
+        };
+    }
 
- async formatCategorySet(categories)
- {
-     return categories.map(category => ({
-         id: category.id,
-         category: category.category,
-         timeentry: category.time_entry
-     }));
- }
- 
+    /**
+     * Transform multiple categories into formatted response objects.
+     * @param {Array} categories - Array of category objects from database.
+     * @return {Array} - Array of formatted category responses.
+     */
+    static formatCategorySet(categories) {
+        return categories.map(category => this.formatCategory(category));
+    }
 }

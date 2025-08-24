@@ -10,10 +10,16 @@ const CategorySchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        isDefault: {
+            type: Boolean,
+            default: false,
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
+            required: function() {
+                return !this.isDefault; // Only required if not a default category
+            },
         },
     },
     {
@@ -36,7 +42,7 @@ CategorySchema.virtual('user', {
     justOne: true,
 });
 
-CategorySchema.set('toObject', { virtuals: true });
+// Ensure virtuals are included when converting to JSON
 CategorySchema.set('toJSON', { virtuals: true });
 
 const Category = mongoose.model('Category', CategorySchema)

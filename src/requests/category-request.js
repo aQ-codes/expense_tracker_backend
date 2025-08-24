@@ -1,90 +1,100 @@
 import Joi from 'joi';
-import CategoryRepository from '../../repositories/category-repository.js';
-
+import CategoryRepository from '../repositories/category-repository.js';
 
 const categoryRepo = new CategoryRepository();
 
-class CreateCategoryRequest {
-       /**
-     *Validate the users input for creating a new category.
-     * @param {newCategory,timeentry}  - The elements from client side .
-     * @return {Object} - An object containing state and message whether the input is valid or not.
+class CategoryRequest {
+    /**
+     * Validation schema for creating a new category
      */
-
-    static categorySchema = Joi.object({
-        category: Joi.string()
-            .min(3)
+    static createCategorySchema = Joi.object({
+        name: Joi.string()
+            .min(2)
             .max(50)
             .required()
             .messages({
-                'string.base': 'Category must be a string',
-                'string.empty': 'Category cannot be empty',
-                'string.min': 'Category must be at least 3 characters long',
-                'string.max': 'Category must be less than or equal to 50 characters',
-                'any.required': 'Category is required'
-            }),
-            time_entry: Joi.string()
-            .required()  
-            .messages({
-                'string.empty': 'Time Entry cannot be empty',
-                'any.required': 'Time Entry is required'
-            }),
+                'string.base': 'Category name must be a string',
+                'string.empty': 'Category name cannot be empty',
+                'string.min': 'Category name must be at least 2 characters long',
+                'string.max': 'Category name must be less than or equal to 50 characters',
+                'any.required': 'Category name is required'
+            })
     });
-    static updateCategorySchema = Joi.object({
-        id:Joi.string()
-            .required(),
-        category: Joi.string()
-            .min(3) 
-            .max(50) 
-            .allow('')  
-            .optional(),  
-    
-        timeentry: Joi.string()
-            .valid('opened', 'closed')  
-            .optional() 
-    }).or('category', 'timeentry'); 
-    
-  
 
-//function for validating category 
-    async validateCategory(newCategory,timeentry) {
-        const { error } = CreateCategoryRequest.categorySchema.validate({ category: newCategory,time_entry:timeentry });
+    /**
+     * Validation schema for updating a category
+     */
+    static updateCategorySchema = Joi.object({
+        name: Joi.string()
+            .min(2)
+            .max(50)
+            .required()
+            .messages({
+                'string.base': 'Category name must be a string',
+                'string.empty': 'Category name cannot be empty',
+                'string.min': 'Category name must be at least 2 characters long',
+                'string.max': 'Category name must be less than or equal to 50 characters',
+                'any.required': 'Category name is required'
+            })
+    });
+
+    /**
+     * Validate category creation data
+     * @param {Object} categoryData - The category data to validate
+     * @returns {Object} Validation result
+     */
+    static validateCreateCategory(categoryData) {
+        const { error, value } = this.createCategorySchema.validate(categoryData, { abortEarly: false });
+        
         if (error) {
-            return { isValid: false, message: error.details.map(err => err.message) };
+            return {
+                isValid: false,
+                errors: error.details.map(detail => detail.message)
+            };
         }
-        try {
-            const existingCategories = await categoryRepo.getAllCategories();
-            const existingCategoryNames = existingCategories.map(cat => cat.category.toLowerCase());
-            if (existingCategoryNames.includes(newCategory.toLowerCase())) {
-                return { isValid: false, message: "Category already exists" };
-            }
-            return { isValid: true, message: "Category is valid and unique" };
-        } catch (err) {
-            return { isValid: false, message: "Error occurred while validating the category" };
-        }
+        
+        return {
+            isValid: true,
+            data: value
+        };
     }
 
-    //Function for validating category while updation
-    async validateUpdateCategory(updateData)
-    {
-        const {error}=CreateCategoryRequest.updateCategorySchema.validate(updateData)
+    /**
+     * Validate category update data
+     * @param {Object} categoryData - The category data to validate
+     * @returns {Object} Validation result
+     */
+    static validateUpdateCategory(categoryData) {
+        const { error, value } = this.updateCategorySchema.validate(categoryData, { abortEarly: false });
+        
         if (error) {
-            return { isValid: false, message: error.details.map(err => err.message) };
+            return {
+                isValid: false,
+                errors: error.details.map(detail => detail.message)
+            };
         }
+        
+        return {
+            isValid: true,
+            data: value
+        };
+    }
+
+    /**
+     * Check if category name already exists for user
+     * @param {String} name - Category name
+     * @param {String} userId - User ID
+     * @returns {Promise<Boolean>} True if exists
+     */
+    static async checkCategoryNameExists(name, userId) {
         try {
-            const existingCategoryNames = (await categoryRepo.getAllCategories())
-            .filter(cat => cat.id !== updateData.id) 
-            .map(cat => cat.category.toLowerCase()); 
-        if (existingCategoryNames.includes(updateData.category.toLowerCase())) {
-            return { isValid: false, message: "Category already exists" };
-        }
-    
-        // If valid, return a success response
-        return { isValid: true, message: "Category is valid" };
-        } catch (err) {
-            return { isValid: false, message: "Error occurred while validating the category" };
+            const exists = await categoryRepo.categoryNameExists(name.trim(), userId);
+            return exists;
+        } catch (error) {
+            console.error('Error checking category name existence:', error);
+            return false;
         }
     }
 }
 
-export default CreateCategoryRequest;
+export default CategoryRequest;

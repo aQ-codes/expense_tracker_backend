@@ -31,7 +31,7 @@ const defaultCategories = [
 async function seedCategories() {
     try {
         console.log('Seeding default categories...');
-        
+         
         for (const category of defaultCategories) {
             const existingCategory = await Category.findOne({ 
                 name: category.name, 
@@ -39,12 +39,20 @@ async function seedCategories() {
             });
             
             if (!existingCategory) {
-                await Category.create(category);
-                console.log(`Created default category: ${category.name}`);
+                const newCategory = await Category.create(category);
+                console.log(`Created default category: ${category.name} with ID: ${newCategory._id}`);
             } else {
-                console.log(`Default category already exists: ${category.name}`);
+                console.log(`Default category already exists: ${category.name} with ID: ${existingCategory._id}`);
             }
         }
+        
+        // Check final count
+        const finalCount = await Category.countDocuments();
+        console.log('Final categories count:', finalCount);
+        
+        // List all categories
+        const allCategories = await Category.find();
+        console.log('All categories in database:', allCategories.map(c => ({ name: c.name, isDefault: c.isDefault, id: c._id })));
         
         console.log('Category seeding completed!');
     } catch (error) {
