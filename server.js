@@ -1,28 +1,86 @@
-import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
-import connectDB from "./src/config/db.js";
-
-
 dotenv.config();
 
+import express from "express";
+import { dbErrorHandler } from "./src/middlewares/db-error-handler.js";
+import connectDB from "./src/config/db.js";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import configureRoutes from "./src/routes/routes.js";
+
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL?.replace(/\/$/, ""),
+].filter(Boolean);
+
+// Create Express app
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// CORS configuration
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allow cookies to be sent and received
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
 
-// DB connection + server start
-const PORT = process.env.PORT || 5000;
+// Use cookie-parser middleware
+app.use(cookieParser());
 
+// Set the port
+const port = process.env.PORT || 5000;
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Connect to MongoDB
 connectDB()
   .then(() => {
-    console.log("MongoDB connected");
+    console.log('Connected to MongoDB');
   })
   .catch((error) => {
     console.error("Error connecting to MongoDB:", error);
   });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Root route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Expense Tracker API", 
+    version: "1.0.0",
+    status: "running"
+  });
+});
+
+// Configure routes
+configureRoutes(app);
+
+// Serve static files
+app.use("/public", express.static("public"));
+
+// Error handling middleware
+app.use(dbErrorHandler);
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    status: false,
+    message: 'Route not found'
+  });
+});
+
+// Start the server
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server is running at http://localhost:${port}`);
 });
