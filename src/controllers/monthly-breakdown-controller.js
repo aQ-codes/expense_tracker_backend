@@ -320,14 +320,12 @@ export default class MonthlyBreakdownController {
                 .map(row => row.map(field => `"${field}"`).join(','))
                 .join('\n');
             
-            // Set response headers for CSV download
-            const monthName = new Date(validation.data.year, validation.data.month - 1, 1)
-                .toLocaleDateString('en-US', { month: 'long' });
-            
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', `attachment; filename="expenses-${monthName}-${validation.data.year}.csv"`);
-            
-            return res.status(200).send(csvContent);
+            // Return JSON response with CSV content for frontend to handle
+            return res.status(200).json({
+                status: true,
+                message: "Monthly expenses exported successfully",
+                data: csvContent
+            });
         } catch (error) {
             if (error instanceof CustomValidationError) {
                 return res.status(422).json({

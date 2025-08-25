@@ -476,11 +476,12 @@ export default class ExpenseController {
                 .map(row => row.map(field => `"${field}"`).join(','))
                 .join('\n');
             
-            // Set response headers for CSV download
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', 'attachment; filename="expenses.csv"');
-            
-            return res.status(200).send(csvContent);
+            // Return JSON response with CSV content for frontend to handle
+            return res.status(200).json({
+                status: true,
+                message: "Expenses exported successfully",
+                data: csvContent
+            });
         } catch (error) {
             if (error instanceof CustomValidationError) {
                 return res.status(422).json({
