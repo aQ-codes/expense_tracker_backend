@@ -89,15 +89,15 @@ export default class ExpenseResponse {
      */
     static getCategoryColor(categoryName) {
         const categoryColors = {
-            'Food': '#dcfce7',
-            'Travel': '#dbeafe',
-            'Bills': '#fef3c7',
-            'Shopping': '#fce7f3',
-            'Transport': '#f3e8ff',
-            'Education': '#fef3c7',
-            'Others': '#fee2e2'
+            'Food': '#10b981',      // Vibrant green
+            'Travel': '#3b82f6',    // Bright blue
+            'Bills': '#f59e0b',     // Vibrant orange
+            'Shopping': '#ec4899',  // Bright pink
+            'Transport': '#8b5cf6', // Vibrant purple
+            'Education': '#06b6d4', // Bright cyan
+            'Others': '#ef4444'     // Bright red
         };
-        return categoryColors[categoryName] || '#f3f4f6';
+        return categoryColors[categoryName] || '#6b7280';
     }
 
     /**
