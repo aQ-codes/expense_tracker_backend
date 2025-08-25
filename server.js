@@ -14,6 +14,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://expense-tracker-user-frontend.vercel.app",
+  "https://expense-tracker-user-frontend.vercel.app/",
   "https://expense-tracker-backend-j42j.onrender.com",
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL?.replace(/\/$/, ""),
