@@ -499,4 +499,179 @@ export default class ExpenseController {
             });
         }
     }
+
+    /**
+     * Get complete dashboard data
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async getDashboardData(req, res) {
+        try {
+            const userId = req.user._id;
+            
+            const dashboardData = await expenseRepo.getDashboardData(userId);
+            
+            // Format the data for frontend
+            const formattedData = {
+                stats: dashboardData.stats,
+                recentExpenses: ExpenseResponse.formatExpenseSetWithCategory(dashboardData.recentExpenses),
+                expenseDistribution: ExpenseResponse.formatChartData(dashboardData).categoryDistribution,
+                monthlyExpensesData: dashboardData.monthlyData.map(item => ({
+                    month: item.month,
+                    amount: item.amount
+                }))
+            };
+            
+            return res.status(200).json({
+                status: true,
+                message: "Dashboard data retrieved successfully",
+                data: formattedData
+            });
+        } catch (error) {
+            console.error('Get dashboard data error:', error);
+            return res.status(500).json({
+                status: false,
+                message: "Failed to retrieve dashboard data",
+                data: null
+            });
+        }
+    }
+
+    /**
+     * Get dashboard statistics
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async getDashboardStats(req, res) {
+        try {
+            const userId = req.user._id;
+            
+            const stats = await expenseRepo.getDashboardStats(userId);
+            
+            return res.status(200).json({
+                status: true,
+                message: "Dashboard statistics retrieved successfully",
+                data: stats
+            });
+        } catch (error) {
+            console.error('Get dashboard stats error:', error);
+            return res.status(500).json({
+                status: false,
+                message: "Failed to retrieve dashboard statistics",
+                data: null
+            });
+        }
+    }
+
+    /**
+     * Get recent expenses for dashboard
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async getRecentExpenses(req, res) {
+        try {
+            const userId = req.user._id;
+            const { limit = 5 } = req.body;
+            
+            // Validate request
+            const validation = ExpenseRequest.validateDashboardRequest({ limit });
+            if (!validation.isValid) {
+                throw new CustomValidationError(validation.errors);
+            }
+            
+            const recentExpenses = await expenseRepo.getRecentExpenses(userId, validation.data.limit);
+            const formattedData = ExpenseResponse.formatRecentExpensesForDashboard(recentExpenses);
+            
+            return res.status(200).json({
+                status: true,
+                message: "Recent expenses retrieved successfully",
+                data: formattedData
+            });
+        } catch (error) {
+            if (error instanceof CustomValidationError) {
+                return res.status(422).json({
+                    status: false,
+                    message: "Validation failed",
+                    data: null,
+                    errors: error.errors
+                });
+            }
+            
+            console.error('Get recent expenses error:', error);
+            return res.status(500).json({
+                status: false,
+                message: "Failed to retrieve recent expenses",
+                data: null
+            });
+        }
+    }
+
+    /**
+     * Get expense distribution for pie chart
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async getExpenseDistribution(req, res) {
+        try {
+            const userId = req.user._id;
+            
+            const categoryDistribution = await expenseRepo.getCategoryDistributionData(userId);
+            const formattedData = ExpenseResponse.formatChartData({ categoryDistribution }).categoryDistribution;
+            
+            return res.status(200).json({
+                status: true,
+                message: "Expense distribution retrieved successfully",
+                data: formattedData
+            });
+        } catch (error) {
+            console.error('Get expense distribution error:', error);
+            return res.status(500).json({
+                status: false,
+                message: "Failed to retrieve expense distribution",
+                data: null
+            });
+        }
+    }
+
+    /**
+     * Get monthly expenses data for bar chart
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async getMonthlyExpensesData(req, res) {
+        try {
+            const userId = req.user._id;
+            const { months = 6 } = req.body;
+            
+            // Validate request
+            const validation = ExpenseRequest.validateDashboardRequest({ months });
+            if (!validation.isValid) {
+                throw new CustomValidationError(validation.errors);
+            }
+            
+            const monthlyData = await expenseRepo.getMonthlyExpensesData(userId, validation.data.months);
+            
+            return res.status(200).json({
+                status: true,
+                message: "Monthly expenses data retrieved successfully",
+                data: monthlyData
+            });
+        } catch (error) {
+            if (error instanceof CustomValidationError) {
+                return res.status(422).json({
+                    status: false,
+                    message: "Validation failed",
+                    data: null,
+                    errors: error.errors
+                });
+            }
+            
+            console.error('Get monthly expenses data error:', error);
+            return res.status(500).json({
+                status: false,
+                message: "Failed to retrieve monthly expenses data",
+                data: null
+            });
+        }
+    }
 }

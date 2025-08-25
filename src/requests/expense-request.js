@@ -216,12 +216,61 @@ class ExpenseRequest {
     }
 
     /**
+     * Validation schema for dashboard requests
+     */
+    static dashboardRequestSchema = Joi.object({
+        limit: Joi.number()
+            .integer()
+            .min(1)
+            .max(20)
+            .default(5)
+            .messages({
+                'number.base': 'Limit must be a number',
+                'number.integer': 'Limit must be an integer',
+                'number.min': 'Limit must be at least 1',
+                'number.max': 'Limit cannot exceed 20'
+            }),
+        months: Joi.number()
+            .integer()
+            .min(1)
+            .max(12)
+            .default(6)
+            .messages({
+                'number.base': 'Months must be a number',
+                'number.integer': 'Months must be an integer',
+                'number.min': 'Months must be at least 1',
+                'number.max': 'Months cannot exceed 12'
+            })
+    });
+
+    /**
      * Validate date range
      * @param {Object} dateRange - The date range to validate
      * @returns {Object} Validation result
      */
     static validateDateRange(dateRange) {
         const { error, value } = this.dateRangeSchema.validate(dateRange, { abortEarly: false });
+        
+        if (error) {
+            return {
+                isValid: false,
+                errors: error.details.map(detail => detail.message)
+            };
+        }
+        
+        return {
+            isValid: true,
+            data: value
+        };
+    }
+
+    /**
+     * Validate dashboard request
+     * @param {Object} requestData - The request data to validate
+     * @returns {Object} Validation result
+     */
+    static validateDashboardRequest(requestData) {
+        const { error, value } = this.dashboardRequestSchema.validate(requestData, { abortEarly: false });
         
         if (error) {
             return {

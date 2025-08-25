@@ -542,4 +542,162 @@ export default class ExpenseRepository {
             throw new Error(error);
         }
     }
+
+    /**
+     * Get dashboard statistics for a user
+     * @param {String} userId - User ID
+     * @returns {Object} Dashboard statistics
+     */
+    async getDashboardStats(userId) {
+        try {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            // Get current month expenses
+            const thisMonthStart = new Date(currentYear, currentMonth, 1);
+            const thisMonthEnd = new Date(currentYear, currentMonth + 1, 0);
+            
+            // Get last month expenses
+            const lastMonthStart = new Date(currentYear, currentMonth - 1, 1);
+            const lastMonthEnd = new Date(currentYear, currentMonth, 0);
+            
+            // Get total expenses
+            const totalExpenses = await Expense.aggregate([
+                { $match: { createdBy: userId } },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ]);
+            
+            // Get this month expenses
+            const thisMonthExpenses = await Expense.aggregate([
+                { 
+                    $match: { 
+                        createdBy: userId,
+                        date: { $gte: thisMonthStart, $lte: thisMonthEnd }
+                    }
+                },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ]);
+            
+            // Get last month expenses
+            const lastMonthExpenses = await Expense.aggregate([
+                { 
+                    $match: { 
+                        createdBy: userId,
+                        date: { $gte: lastMonthStart, $lte: lastMonthEnd }
+                    }
+                },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ]);
+            
+            const total = totalExpenses[0]?.total || 0;
+            const thisMonth = thisMonthExpenses[0]?.total || 0;
+            const lastMonth = lastMonthExpenses[0]?.total || 0;
+            
+            // Calculate percentage change
+            const percentageChange = lastMonth > 0 ? ((thisMonth - lastMonth) / lastMonth) * 100 : 0;
+            
+            return {
+                totalExpenses: total,
+                thisMonthExpenses: thisMonth,
+                lastMonthExpenses: lastMonth,
+                percentageChange: percentageChange
+            };
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
+
+    /**
+     * Get recent expenses for dashboard
+     * @param {String} userId - User ID
+     * @param {Number} limit - Number of recent expenses to fetch
+     * @returns {Array} Recent expenses
+     */
+    async getRecentExpenses(userId, limit = 5) {
+        try {
+            const expenses = await Expense.find({ createdBy: userId })
+                .populate('category', 'name isDefault')
+                .sort({ date: -1, createdAt: -1 })
+                .limit(limit);
+            
+            return expenses;
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
+
+    /**
+     * Get monthly expenses data for the last N months
+     * @param {String} userId - User ID
+     * @param {Number} months - Number of months to fetch
+     * @returns {Array} Monthly expenses data
+     */
+    async getMonthlyExpensesData(userId, months = 6) {
+        try {
+            const now = new Date();
+            const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+            
+            const monthlyData = await Expense.aggregate([
+                { 
+                    $match: { 
+                        createdBy: userId,
+                        date: { $gte: startDate }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: '$date' },
+                            month: { $month: '$date' }
+                        },
+                        amount: { $sum: '$amount' }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        month: {
+                            $concat: [
+                                { $toString: '$_id.month' },
+                                '/',
+                                { $toString: '$_id.year' }
+                            ]
+                        },
+                        amount: 1
+                    }
+                },
+                { $sort: { month: 1 } }
+            ]);
+            
+            return monthlyData;
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
+
+    /**
+     * Get complete dashboard data
+     * @param {String} userId - User ID
+     * @returns {Object} Complete dashboard data
+     */
+    async getDashboardData(userId) {
+        try {
+            const [stats, recentExpenses, categoryDistribution, monthlyData] = await Promise.all([
+                this.getDashboardStats(userId),
+                this.getRecentExpenses(userId, 5),
+                this.getCategoryDistributionData(userId),
+                this.getMonthlyExpensesData(userId, 6)
+            ]);
+            
+            return {
+                stats,
+                recentExpenses,
+                categoryDistribution,
+                monthlyData
+            };
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
 }

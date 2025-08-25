@@ -64,4 +64,39 @@ router.post('/chart-data', expenseController.getChartData.bind(expenseController
  */
 router.post('/export', expenseController.exportExpenses.bind(expenseController));
 
+/**
+ * @route POST /api/expenses/dashboard
+ * @desc Get complete dashboard data
+ * @access Private
+ */
+router.post('/dashboard', expenseController.getDashboardData.bind(expenseController));
+
+/**
+ * @route POST /api/expenses/dashboard/stats
+ * @desc Get dashboard statistics
+ * @access Private
+ */
+router.post('/dashboard/stats', expenseController.getDashboardStats.bind(expenseController));
+
+/**
+ * @route POST /api/expenses/dashboard/recent
+ * @desc Get recent expenses for dashboard
+ * @access Private
+ */
+router.post('/dashboard/recent', expenseController.getRecentExpenses.bind(expenseController));
+
+/**
+ * @route POST /api/expenses/dashboard/distribution
+ * @desc Get expense distribution for pie chart
+ * @access Private
+ */
+router.post('/dashboard/distribution', expenseController.getExpenseDistribution.bind(expenseController));
+
+/**
+ * @route POST /api/expenses/dashboard/monthly
+ * @desc Get monthly expenses data for bar chart
+ * @access Private
+ */
+router.post('/dashboard/monthly', expenseController.getMonthlyExpensesData.bind(expenseController));
+
 export default router;

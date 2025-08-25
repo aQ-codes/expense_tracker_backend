@@ -99,4 +99,44 @@ export default class ExpenseResponse {
         };
         return categoryColors[categoryName] || '#f3f4f6';
     }
+
+    /**
+     * Format recent expenses for dashboard display.
+     * @param {Array} expenses - Array of expense objects with populated categories.
+     * @return {Array} - Array of formatted recent expenses for dashboard.
+     */
+    static formatRecentExpensesForDashboard(expenses) {
+        return expenses.map(expense => ({
+            _id: expense._id,
+            title: expense.title,
+            amount: expense.amount,
+            date: expense.date,
+            formattedDate: formatDate.formatDateForDisplay(expense.date),
+            category: {
+                _id: expense.category._id,
+                name: expense.category.name,
+                color: this.getCategoryColor(expense.category.name)
+                // Don't send icon from backend, let frontend handle it
+            },
+            createdBy: expense.createdBy
+        }));
+    }
+
+    /**
+     * Get icon for category (for dashboard display).
+     * @param {String} categoryName - Name of the category.
+     * @return {String} - Icon identifier.
+     */
+    static getCategoryIcon(categoryName) {
+        const categoryIcons = {
+            'Food': '🍽️',
+            'Travel': '✈️',
+            'Bills': '📄',
+            'Shopping': '🛍️',
+            'Transport': '🚗',
+            'Education': '📚',
+            'Others': '📦'
+        };
+        return categoryIcons[categoryName] || '📦';
+    }
 }
