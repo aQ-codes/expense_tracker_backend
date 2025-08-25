@@ -21,7 +21,7 @@ router.post('/login', AuthController.login);
 /**
  * @route POST /api/auth/logout
  * @desc Logout user
- * @access Private
+ * @access Public (no auth required since we're logging out)
  */
 router.post('/logout', AuthController.logout);
 

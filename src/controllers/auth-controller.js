@@ -87,8 +87,8 @@ export default class AuthController {
             // Set cookie
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production', // false in development
+                sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
@@ -157,8 +157,8 @@ export default class AuthController {
             // Set cookie
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production', // false in development
+                sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
@@ -189,15 +189,44 @@ export default class AuthController {
      */
     static async logout(req, res) {
         try {
-            // Clear the token cookie
-            res.clearCookie('token');
+            console.log('Backend: Logout request received');
+            console.log('Backend: Cookies before clearing:', req.cookies);
+            
+            // Clear the HTTP-only token cookie with exact same options as when it was set
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // false in development
+                sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+                path: '/',
+                maxAge: 0
+            });
+            
+            // Also try clearing without httpOnly (in case there are client-side cookies)
+            res.clearCookie('token', {
+                path: '/',
+                maxAge: 0
+            });
+            
+            // Set an expired cookie to override any existing ones
+            res.cookie('token', '', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // false in development
+                sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+                path: '/',
+                maxAge: 0,
+                expires: new Date(0)
+            });
+            
+            console.log('Backend: HTTP-only cookie cleared with multiple methods');
             
             return res.status(200).json({
                 status: true,
                 message: 'Logged out successfully'
             });
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('Backend: Logout error:', error);
+            // Even if there's an error, try to clear the cookie
+            res.clearCookie('token', { path: '/', maxAge: 0 });
             return AuthController.handleError(res, 'Logout failed', 500);
         }
     }
