@@ -517,7 +517,7 @@ export default class ExpenseController {
                 recentExpenses: ExpenseResponse.formatExpenseSetWithCategory(dashboardData.recentExpenses),
                 expenseDistribution: ExpenseResponse.formatChartData(dashboardData).categoryDistribution,
                 monthlyExpensesData: dashboardData.monthlyData.map(item => ({
-                    month: item.month,
+                    date: item.month,
                     amount: item.amount
                 }))
             };
@@ -651,10 +651,16 @@ export default class ExpenseController {
             
             const monthlyData = await expenseRepo.getMonthlyExpensesData(userId, validation.data.months);
             
+            // Transform the data to match frontend expectations
+            const formattedData = monthlyData.map(item => ({
+                date: item.month,
+                amount: item.amount
+            }));
+            
             return res.status(200).json({
                 status: true,
                 message: "Monthly expenses data retrieved successfully",
-                data: monthlyData
+                data: formattedData
             });
         } catch (error) {
             if (error instanceof CustomValidationError) {

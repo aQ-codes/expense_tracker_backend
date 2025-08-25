@@ -659,8 +659,26 @@ export default class ExpenseRepository {
                         _id: 0,
                         month: {
                             $concat: [
-                                { $toString: '$_id.month' },
-                                '/',
+                                {
+                                    $switch: {
+                                        branches: [
+                                            { case: { $eq: ['$_id.month', 1] }, then: 'Jan' },
+                                            { case: { $eq: ['$_id.month', 2] }, then: 'Feb' },
+                                            { case: { $eq: ['$_id.month', 3] }, then: 'Mar' },
+                                            { case: { $eq: ['$_id.month', 4] }, then: 'Apr' },
+                                            { case: { $eq: ['$_id.month', 5] }, then: 'May' },
+                                            { case: { $eq: ['$_id.month', 6] }, then: 'Jun' },
+                                            { case: { $eq: ['$_id.month', 7] }, then: 'Jul' },
+                                            { case: { $eq: ['$_id.month', 8] }, then: 'Aug' },
+                                            { case: { $eq: ['$_id.month', 9] }, then: 'Sep' },
+                                            { case: { $eq: ['$_id.month', 10] }, then: 'Oct' },
+                                            { case: { $eq: ['$_id.month', 11] }, then: 'Nov' },
+                                            { case: { $eq: ['$_id.month', 12] }, then: 'Dec' }
+                                        ],
+                                        default: 'Unknown'
+                                    }
+                                },
+                                ' ',
                                 { $toString: '$_id.year' }
                             ]
                         },

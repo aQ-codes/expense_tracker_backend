@@ -238,14 +238,21 @@ export default class AuthController {
      */
     static async getProfile(req, res) {
         try {
+            const userRepo = new UserRepository();
+            const userProfile = await userRepo.getUserProfile(req.user._id);
+            
+            if (!userProfile) {
+                return AuthController.handleError(res, 'User not found', 404);
+            }
+
             return res.status(200).json({
                 status: true,
                 message: 'Profile retrieved successfully',
                 data: {
                     user: {
-                        id: req.user._id,
-                        name: req.user.name,
-                        email: req.user.email
+                        id: userProfile._id,
+                        name: userProfile.name,
+                        email: userProfile.email
                     }
                 }
             });

@@ -57,4 +57,13 @@ export default class UserRepository {
         }
         return await User.findOne(query);
     }
+
+    /**
+     * Get user profile data (name, email) by ID
+     * @param {String} userId - User's ID
+     * @return {Promise<Object>} User profile object with name and email
+     */
+    async getUserProfile(userId) {
+        return await User.findById(userId).select('name email');
+    }
 }
