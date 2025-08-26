@@ -9,34 +9,54 @@ import cookieParser from "cookie-parser";
 import configureRoutes from "./src/routes/routes.js";
 import seedCategories from "./src/seeders/category-seeder.js";
 
-
+// Define allowed origins more explicitly
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
+  "https://expense-tracker-user-frontend-6ctb1gqpj.vercel.app", // Your Vercel URL
   process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL?.replace(/\/$/, ""),
+  process.env.FRONTEND_URL?.replace(/\/$/, ""), // Remove trailing slash if present
 ].filter(Boolean);
 
 // Create Express app
 const app = express();
 
-// CORS configuration
+// Trust proxy (important for Render deployment)
+app.set('trust proxy', 1);
+
+// CORS configuration - MUST be before other middleware
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log('CORS blocked origin:', origin); // For debugging
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // Allow cookies to be sent and received
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true, // Essential for cookies
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: [
+      "Content-Type", 
+      "Authorization", 
+      "X-Requested-With",
+      "Accept",
+      "Origin"
+    ],
+    exposedHeaders: ["Set-Cookie"],
+    optionsSuccessStatus: 200, // For legacy browser support
+    preflightContinue: false
   })
 );
 
-// Use cookie-parser middleware
+// Handle preflight requests explicitly
+app.options('*', cors());
+
+// Use cookie-parser middleware (AFTER CORS)
 app.use(cookieParser());
 
 // Set the port
@@ -67,7 +87,8 @@ app.get("/", (req, res) => {
   res.json({ 
     message: "Expense Tracker API", 
     version: "1.0.0",
-    status: "running"
+    status: "running",
+    cors_origins: allowedOrigins // For debugging
   });
 });
 
@@ -91,4 +112,6 @@ app.use('*', (req, res) => {
 // Start the server
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server is running at http://localhost:${port}`);
+  console.log('Allowed origins:', allowedOrigins);
+  console.log('Environment:', process.env.NODE_ENV);
 });

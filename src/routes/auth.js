@@ -25,11 +25,6 @@ router.post('/login', AuthController.login);
  */
 router.post('/logout', AuthController.logout);
 
-/**
- * @route GET /api/auth/profile
- * @desc Get current user profile
- * @access Private
- */
-router.get('/profile', authenticateUser, AuthController.getProfile);
+
 
 export default router;
