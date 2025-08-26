@@ -13,7 +13,7 @@ import seedCategories from "./src/seeders/category-seeder.js";
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
-  "https://expense-tracker-user-frontend-6ctb1gqpj.vercel.app", // Your Vercel URL
+  "https://expense-tracker-user-frontend.vercel.app", // Your Vercel URL
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL?.replace(/\/$/, ""), // Remove trailing slash if present
 ].filter(Boolean);
