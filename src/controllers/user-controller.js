@@ -23,14 +23,19 @@ export default class UserController {
      */
     static async getProfile(req, res) {
         try {
+            console.log('🔍 User profile request received for user ID:', req.user._id);
+            
             const userRepo = new UserRepository();
             const userProfile = await userRepo.getUserProfile(req.user._id);
             
+            console.log('👤 User profile from database:', userProfile);
+            
             if (!userProfile) {
+                console.log('❌ User not found in database');
                 return UserController.handleError(res, 'User not found', 404);
             }
 
-            return res.status(200).json({
+            const responseData = {
                 status: true,
                 message: 'Profile retrieved successfully',
                 data: {
@@ -40,9 +45,12 @@ export default class UserController {
                         email: userProfile.email
                     }
                 }
-            });
+            };
+            
+            console.log('✅ Sending profile response:', responseData);
+            return res.status(200).json(responseData);
         } catch (error) {
-            console.error('Get profile error:', error);
+            console.error('❌ Get profile error:', error);
             return UserController.handleError(res, 'Failed to get profile', 500);
         }
     }

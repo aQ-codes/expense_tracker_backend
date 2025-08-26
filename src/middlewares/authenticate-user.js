@@ -9,10 +9,17 @@ const UserRepo = new UserRepository()
  */
 const authenticateUser = async (req, res, next) => {
     try {
+        console.log('🔐 Authentication middleware called for:', req.method, req.path);
+        console.log('🍪 Cookies:', req.cookies);
+        console.log('📋 Headers:', req.headers.authorization ? 'Authorization header present' : 'No authorization header');
+        
         // Get token from cookie
         const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
         
+        console.log('🎫 Token found:', token ? 'Yes' : 'No');
+        
         if (!token) {
+            console.log('❌ No token provided');
             return res.status(401).json({ 
                 status: false, 
                 message: 'Access denied. No token provided.' 

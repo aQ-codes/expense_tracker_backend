@@ -52,7 +52,6 @@ async function seedCategories() {
         
         // List all categories
         const allCategories = await Category.find();
-        console.log('All categories in database:', allCategories.map(c => ({ name: c.name, isDefault: c.isDefault, id: c._id })));
         
         console.log('Category seeding completed!');
     } catch (error) {
